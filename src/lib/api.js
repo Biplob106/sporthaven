@@ -1,10 +1,17 @@
+import { getAuthToken } from "./auth-client";
+
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 async function request(path, options = {}) {
+  const token =
+    typeof window !== "undefined" ? await getAuthToken() : null;
+
   const res = await fetch(`${API_BASE}${path}`, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
     ...options,

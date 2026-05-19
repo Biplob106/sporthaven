@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { clearAuthToken, signOut, useSession } from "../lib/auth-client";
 
 const publicLinks = [
   { href: "/", label: "Home" },
@@ -15,7 +17,11 @@ const privateLinks = [
 ];
 
 export default function Navbar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
+  const user = session?.user;
+  const isLoggedIn = !!user;
+
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -30,16 +36,19 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogin = () => {
-    setIsLoggedIn(true);
-    setMobileOpen(false);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
+    await signOut();
+    clearAuthToken();
     setProfileOpen(false);
     setMobileOpen(false);
+    router.push("/");
+    router.refresh();
   };
+
+  const avatarInitial =
+    user?.name?.charAt(0).toUpperCase() ||
+    user?.email?.charAt(0).toUpperCase() ||
+    "U";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/70">
@@ -78,16 +87,27 @@ export default function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
-          {isLoggedIn ? (
+          {isPending ? (
+            <span className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
+          ) : isLoggedIn ? (
             <div className="relative" ref={profileRef}>
               <button
                 type="button"
                 onClick={() => setProfileOpen((open) => !open)}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white ring-2 ring-transparent transition hover:ring-emerald-200 focus:outline-none focus:ring-emerald-300"
+                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-emerald-600 text-sm font-semibold text-white ring-2 ring-transparent transition hover:ring-emerald-200 focus:outline-none focus:ring-emerald-300"
                 aria-haspopup="menu"
                 aria-expanded={profileOpen}
               >
-                U
+                {user?.image || user?.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={user.image || user.photoURL}
+                    alt={user.name || "Profile"}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  avatarInitial
+                )}
               </button>
               {profileOpen && (
                 <div
@@ -95,11 +115,11 @@ export default function Navbar() {
                   className="absolute right-0 mt-2 w-56 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-950"
                 >
                   <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      Signed in
+                    <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {user?.name || "Signed in"}
                     </p>
                     <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                      user@sporthaven.com
+                      {user?.email}
                     </p>
                   </div>
                   <ul className="py-1">
@@ -128,13 +148,12 @@ export default function Navbar() {
               )}
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={handleLogin}
+            <Link
+              href="/login"
               className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
               Login
-            </button>
+            </Link>
           )}
         </div>
 
@@ -207,13 +226,13 @@ export default function Navbar() {
                 Logout
               </button>
             ) : (
-              <button
-                type="button"
-                onClick={handleLogin}
-                className="w-full rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              <Link
+                href="/login"
+                onClick={() => setMobileOpen(false)}
+                className="block w-full rounded-full bg-emerald-600 px-4 py-2 text-center text-sm font-semibold text-white transition hover:bg-emerald-700"
               >
                 Login
-              </button>
+              </Link>
             )}
           </div>
         </div>
