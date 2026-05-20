@@ -1,34 +1,51 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { api } from "../../lib/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { EmptyView, ErrorView, LoadingView } from "../../components/StateViews";
+import { Toast } from "../../components/Toast";
+import { api } from "../../lib/api";
 
-const tabs = ["All", "Confirmed", "Pending", "Completed", "Cancelled"];
+const tabs = ["All", "pending", "confirmed", "completed", "cancelled"];
 
 const statusStyles = {
-  Confirmed:
+  confirmed:
     "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
-  Pending:
+  pending:
     "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  Completed:
+  completed:
     "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  Cancelled: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+  cancelled: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 };
+
+const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 export default function MyBookingsPage() {
   const [bookings, setBookings] = useState([]);
+  const [facilitiesById, setFacilitiesById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState("All");
   const [cancellingId, setCancellingId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.get("/bookings/mine");
-      setBookings(Array.isArray(data) ? data : data.bookings || []);
+      const [bookingsData, facilitiesData] = await Promise.all([
+        api.get("/bookings"),
+        api.get("/facilities"),
+      ]);
+      const bs = Array.isArray(bookingsData)
+        ? bookingsData
+        : bookingsData.bookings || [];
+      const fs = Array.isArray(facilitiesData)
+        ? facilitiesData
+        : facilitiesData.facilities || [];
+      const map = {};
+      for (const f of fs) map[f._id] = f;
+      setBookings(bs);
+      setFacilitiesById(map);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -42,22 +59,32 @@ export default function MyBookingsPage() {
 
   const cancelBooking = async (id) => {
     setCancellingId(id);
+    setToast(null);
     try {
-      await api.patch(`/bookings/${id}/cancel`);
+      await api.patch(`/bookings/${id}`, { status: "cancelled" });
       setBookings((prev) =>
         prev.map((b) =>
-          (b._id || b.id) === id ? { ...b, status: "Cancelled" } : b
+          (b._id || b.id) === id ? { ...b, status: "cancelled" } : b
         )
       );
+      setToast({ type: "success", message: "Booking cancelled." });
     } catch (err) {
-      alert(`Failed to cancel: ${err.message}`);
+      setToast({ type: "error", message: `Failed to cancel: ${err.message}` });
     } finally {
       setCancellingId(null);
     }
   };
 
-  const filtered =
-    tab === "All" ? bookings : bookings.filter((b) => b.status === tab);
+  const filtered = useMemo(
+    () =>
+      tab === "All"
+        ? bookings
+        : bookings.filter((b) => (b.status || "").toLowerCase() === tab),
+    [bookings, tab]
+  );
+
+  const countBy = (s) =>
+    bookings.filter((b) => (b.status || "").toLowerCase() === s).length;
 
   return (
     <div className="bg-zinc-50 dark:bg-black">
@@ -75,17 +102,17 @@ export default function MyBookingsPage() {
             <Stat label="Total" value={bookings.length} accent="bg-zinc-900" />
             <Stat
               label="Confirmed"
-              value={bookings.filter((b) => b.status === "Confirmed").length}
+              value={countBy("confirmed")}
               accent="bg-emerald-600"
             />
             <Stat
               label="Pending"
-              value={bookings.filter((b) => b.status === "Pending").length}
+              value={countBy("pending")}
               accent="bg-amber-500"
             />
             <Stat
               label="Completed"
-              value={bookings.filter((b) => b.status === "Completed").length}
+              value={countBy("completed")}
               accent="bg-blue-600"
             />
           </div>
@@ -93,6 +120,8 @@ export default function MyBookingsPage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {toast && <Toast {...toast} />}
+
         <div className="mb-6 flex flex-wrap gap-2">
           {tabs.map((t) => (
             <button
@@ -105,7 +134,7 @@ export default function MyBookingsPage() {
                   : "bg-white text-zinc-700 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
               }`}
             >
-              {t}
+              {t === "All" ? t : cap(t)}
             </button>
           ))}
         </div>
@@ -136,45 +165,46 @@ export default function MyBookingsPage() {
                 <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
                   {filtered.map((b) => {
                     const id = b._id || b.id;
+                    const facility = facilitiesById[b.facility_id];
+                    const status = (b.status || "").toLowerCase();
                     return (
                       <tr
                         key={id}
                         className="transition hover:bg-zinc-50 dark:hover:bg-zinc-900/50"
                       >
                         <Td className="font-mono text-xs text-zinc-500">
-                          {id}
+                          {String(id).slice(-8)}
                         </Td>
                         <Td>
                           <div className="font-semibold text-zinc-900 dark:text-white">
-                            {b.facility?.name || b.facility}
+                            {facility?.name || "Unknown facility"}
                           </div>
                           <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {b.sport || b.facility?.sport}
+                            {facility?.facility_type || facility?.location || ""}
                           </div>
                         </Td>
                         <Td>
                           <div className="text-sm text-zinc-900 dark:text-zinc-100">
-                            {b.date}
+                            {b.booking_date}
                           </div>
                           <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {b.time}
+                            {b.time_slot} · {b.hours}h
                           </div>
                         </Td>
                         <Td className="font-semibold text-zinc-900 dark:text-white">
-                          ৳{b.price}
+                          ৳{b.total_price}
                         </Td>
                         <Td>
                           <span
                             className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                              statusStyles[b.status] || ""
+                              statusStyles[status] || ""
                             }`}
                           >
-                            {b.status}
+                            {cap(status)}
                           </span>
                         </Td>
                         <Td className="text-right">
-                          {b.status === "Confirmed" ||
-                          b.status === "Pending" ? (
+                          {status === "pending" || status === "confirmed" ? (
                             <button
                               type="button"
                               disabled={cancellingId === id}
@@ -197,6 +227,8 @@ export default function MyBookingsPage() {
             <div className="space-y-4 md:hidden">
               {filtered.map((b) => {
                 const id = b._id || b.id;
+                const facility = facilitiesById[b.facility_id];
+                const status = (b.status || "").toLowerCase();
                 return (
                   <div
                     key={id}
@@ -205,39 +237,39 @@ export default function MyBookingsPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="font-semibold text-zinc-900 dark:text-white">
-                          {b.facility?.name || b.facility}
+                          {facility?.name || "Unknown facility"}
                         </h3>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {b.sport || b.facility?.sport} · {id}
+                          {facility?.facility_type || ""} · {String(id).slice(-8)}
                         </p>
                       </div>
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-                          statusStyles[b.status] || ""
+                          statusStyles[status] || ""
                         }`}
                       >
-                        {b.status}
+                        {cap(status)}
                       </span>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                       <div>
                         <div className="text-xs text-zinc-500">Date</div>
                         <div className="text-zinc-900 dark:text-white">
-                          {b.date}
+                          {b.booking_date}
                         </div>
                       </div>
                       <div>
                         <div className="text-xs text-zinc-500">Time</div>
                         <div className="text-zinc-900 dark:text-white">
-                          {b.time}
+                          {b.time_slot}
                         </div>
                       </div>
                     </div>
                     <div className="mt-3 flex items-center justify-between border-t border-zinc-100 pt-3 dark:border-zinc-900">
                       <span className="font-bold text-zinc-900 dark:text-white">
-                        ৳{b.price}
+                        ৳{b.total_price}
                       </span>
-                      {b.status === "Confirmed" || b.status === "Pending" ? (
+                      {status === "pending" || status === "confirmed" ? (
                         <button
                           type="button"
                           disabled={cancellingId === id}
