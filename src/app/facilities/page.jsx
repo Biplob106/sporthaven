@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../../lib/api";
+import {
+  getFacilityImage,
+  getFacilityPrice,
+  getFacilitySport,
+} from "../../lib/facilityImage";
 import { EmptyView, ErrorView, LoadingView } from "../../components/StateViews";
 
 const sports = [
@@ -45,7 +50,8 @@ export default function FacilitiesPage() {
         !query ||
         f.name?.toLowerCase().includes(query.toLowerCase()) ||
         f.location?.toLowerCase().includes(query.toLowerCase());
-      const matchesSport = sport === "All" || f.sport === sport;
+      const fSport = getFacilitySport(f).toLowerCase();
+      const matchesSport = sport === "All" || fSport.includes(sport.toLowerCase());
       return matchesQuery && matchesSport;
     });
   }, [facilities, query, sport]);
@@ -137,19 +143,20 @@ export default function FacilitiesPage() {
 
 function FacilityCard({ facility: f }) {
   const id = f._id || f.id;
+  const image = getFacilityImage(f);
+  const sport = getFacilitySport(f);
+  const price = getFacilityPrice(f);
   return (
     <article className="group overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
       <div className="relative h-48 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-        {f.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={f.image}
-            alt={f.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt={f.name}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
         <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
-          {f.sport}
+          {sport}
         </span>
         {f.rating != null && (
           <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-zinc-900 backdrop-blur">
@@ -204,7 +211,7 @@ function FacilityCard({ facility: f }) {
         <div className="mt-5 flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-900">
           <div>
             <span className="text-xl font-bold text-zinc-900 dark:text-white">
-              ৳{f.price}
+              ৳{price}
             </span>
             <span className="text-xs text-zinc-500 dark:text-zinc-400">
               {" "}

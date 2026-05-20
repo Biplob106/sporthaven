@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../lib/api";
+import {
+  getFacilityImage,
+  getFacilityPrice,
+  getFacilitySport,
+} from "../lib/facilityImage";
 import { ErrorView, LoadingView } from "./StateViews";
 
 export default function FeaturedFacilities() {
@@ -80,20 +85,19 @@ export default function FeaturedFacilities() {
 
 function FacilityCard({ facility: f }) {
   const id = f._id || f.id;
-  const price = f.price ?? f.pricePerHour;
-  const sport = f.sport || (Array.isArray(f.sports) ? f.sports[0] : "");
+  const price = getFacilityPrice(f);
+  const sport = getFacilitySport(f);
+  const image = getFacilityImage(f);
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-950">
       <div className="relative h-48 w-full overflow-hidden bg-zinc-100 dark:bg-zinc-900">
-        {f.image && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={f.image}
-            alt={f.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt={f.name}
+          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+        />
         {sport && (
           <span className="absolute left-3 top-3 rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white">
             {sport}
