@@ -92,60 +92,7 @@ Facility owners can also list their own venues, manage them, and start receiving
 
 ---
 
-## 🏗️ Architecture
 
-```
-┌──────────────────────┐        ┌──────────────────────┐        ┌──────────────┐
-│  Next.js Frontend    │        │  Express API         │        │  MongoDB     │
-│  sporthaven.vercel   │ ─────► │  sporthaven-server   │ ─────► │  Atlas       │
-│                      │        │  .vercel.app         │        │              │
-│  • Pages & UI        │        │  • /facilities CRUD  │        │  • facilities│
-│  • Better Auth       │        │  • /bookings CRUD    │        │  • bookings  │
-│  • /api/auth/*       │        │  • JWT verify (jose) │        │  • auth_*    │
-└──────────────────────┘        └──────────────────────┘        └──────────────┘
-        ▲                                  ▲
-        │ HTTP-only cookie + JWT           │
-        └──────────────────────────────────┘
-                (Bearer token forwarded)
-```
-
-The frontend issues a JWT via Better Auth, stores it in an HTTP-only cookie, and forwards it as a Bearer token to the Express API. The API verifies the JWT against Better Auth's JWKS endpoint before allowing private writes.
-
----
-
-## 🗄️ Database Schema
-
-**Facilities Collection**
-
-| Field | Type |
-|---|---|
-| `_id` | ObjectId |
-| `name` | string |
-| `facility_type` | string |
-| `location` | string |
-| `price_per_hour` | number |
-| `capacity` | number |
-| `available_slots` | string[] |
-| `description` | string |
-| `image` | string (URL) |
-| `amenities` | string[] |
-| `owner_email` | string (auto-filled) |
-| `booking_count` | number |
-
-**Bookings Collection**
-
-| Field | Type |
-|---|---|
-| `_id` | ObjectId |
-| `facility_id` | string |
-| `user_email` | string |
-| `booking_date` | string (YYYY-MM-DD) |
-| `time_slot` | string |
-| `hours` | number |
-| `total_price` | number |
-| `status` | `"pending" \| "confirmed" \| "completed" \| "cancelled"` |
-
----
 
 ## 🚀 Run Locally
 
@@ -166,39 +113,8 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-### Required `.env` (frontend)
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:5000
-BETTER_AUTH_URL=http://localhost:3000
-NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
-BETTER_AUTH_SECRET=<random-32-char-string>
-MONGODB_URI=<mongodb-atlas-connection-string>
-MONGODB_DB=sportHavenDB
-GOOGLE_CLIENT_ID=<from google cloud console>
-GOOGLE_CLIENT_SECRET=<from google cloud console>
-```
 
-### Required `.env` (backend)
-
-```env
-MONGODB_URI=<same as frontend>
-AUTH_BASE=http://localhost:3000
-PORT=5000
-```
-
----
-
-## 📜 Available Scripts
-
-| Command | What it does |
-|---|---|
-| `npm run dev` | Start Next.js with Turbopack |
-| `npm run build` | Production build |
-| `npm run start` | Run the production build |
-| `npm run lint` | Lint the project |
-
----
 
 ## 📄 License
 
