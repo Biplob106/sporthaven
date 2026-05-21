@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { clearAuthToken, signOut, useSession } from "../lib/auth-client";
+import ThemeToggle from "./ThemeToggle";
 
 const publicLinks = [
   { href: "/", label: "Home" },
@@ -87,6 +88,7 @@ export default function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-3 md:flex">
+          <ThemeToggle />
           {isPending ? (
             <span className="h-9 w-9 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-800" />
           ) : isLoggedIn ? (
@@ -157,10 +159,12 @@ export default function Navbar() {
           )}
         </div>
 
-        <button
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
           type="button"
           onClick={() => setMobileOpen((open) => !open)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-zinc-700 transition hover:bg-zinc-100 md:hidden dark:text-zinc-300 dark:hover:bg-zinc-900"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md text-zinc-700 transition hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900"
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
         >
@@ -187,6 +191,7 @@ export default function Navbar() {
             )}
           </svg>
         </button>
+        </div>
       </nav>
 
       {mobileOpen && (

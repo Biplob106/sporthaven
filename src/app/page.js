@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FeaturedFacilities from "../components/FeaturedFacilities";
+import { FadeIn, StaggerGroup, StaggerItem } from "../components/Motion";
 
 const popularSports = [
   {
@@ -97,20 +98,26 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 to-transparent" aria-hidden />
 
         <div className="relative mx-auto flex max-w-7xl flex-col items-start gap-6 px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-emerald-100 backdrop-blur">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            New venues added every week
-          </span>
+          <FadeIn delay={0}>
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-emerald-100 backdrop-blur">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              New venues added every week
+            </span>
+          </FadeIn>
 
-          <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-            Book Your Game.{" "}
-            <span className="text-emerald-400">Anytime, Anywhere.</span>
-          </h1>
+          <FadeIn delay={0.1}>
+            <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              Book Your Game.{" "}
+              <span className="text-emerald-400">Anytime, Anywhere.</span>
+            </h1>
+          </FadeIn>
 
-          <p className="max-w-2xl text-base text-zinc-200 sm:text-lg">
-            SportHaven helps you discover and reserve sports facilities near
-            you — turfs, courts, pools, and more. Skip the calls. Just play.
-          </p>
+          <FadeIn delay={0.2}>
+            <p className="max-w-2xl text-base text-zinc-200 sm:text-lg">
+              SportHaven helps you discover and reserve sports facilities near
+              you — turfs, courts, pools, and more. Skip the calls. Just play.
+            </p>
+          </FadeIn>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
@@ -167,9 +174,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+          <StaggerGroup className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
             {steps.map((s) => (
-              <div
+              <StaggerItem
                 key={s.n}
                 className="group relative rounded-2xl border border-zinc-200 bg-zinc-50 p-6 transition hover:border-emerald-300 hover:bg-white hover:shadow-lg dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-emerald-700 dark:hover:bg-zinc-950"
               >
@@ -193,9 +200,9 @@ export default function Home() {
                 <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
                   {s.desc}
                 </p>
-              </div>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -216,12 +223,15 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <StaggerGroup className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6" stagger={0.06}>
             {popularSports.map((s) => (
-              <Link
+              <StaggerItem
                 key={s.name}
-                href={`/facilities?sport=${encodeURIComponent(s.name)}`}
                 className="group relative aspect-square overflow-hidden rounded-2xl"
+              >
+                <Link
+                href={`/facilities?sport=${encodeURIComponent(s.name)}`}
+                className="block h-full w-full"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -235,8 +245,9 @@ export default function Home() {
                   <p className="text-xs text-zinc-300">{s.venues} venues</p>
                 </div>
               </Link>
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 

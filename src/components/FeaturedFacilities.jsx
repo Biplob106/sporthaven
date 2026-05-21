@@ -8,6 +8,7 @@ import {
   getFacilityPrice,
   getFacilitySport,
 } from "../lib/facilityImage";
+import { StaggerGroup, StaggerItem } from "./Motion";
 import { ErrorView, LoadingView } from "./StateViews";
 
 export default function FeaturedFacilities() {
@@ -71,11 +72,13 @@ export default function FeaturedFacilities() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <StaggerGroup className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {facilities.map((f) => (
-                <FacilityCard key={f._id || f.id} facility={f} />
+                <StaggerItem key={f._id || f.id}>
+                  <FacilityCard facility={f} />
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerGroup>
           )}
         </div>
       </div>
