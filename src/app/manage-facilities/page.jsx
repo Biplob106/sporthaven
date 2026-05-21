@@ -153,6 +153,7 @@ export default function ManageFacilitiesPage() {
             {facilities.map((f) => {
               const id = f._id || f.id;
               const image = getFacilityImage(f);
+              const fallbackImage = getFacilityImage({ ...f, image: undefined });
               const sport = getFacilitySport(f);
               const price = getFacilityPrice(f);
               return (
@@ -166,6 +167,13 @@ export default function ManageFacilitiesPage() {
                       <img
                         src={image}
                         alt={f.name}
+                        loading="lazy"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          if (e.currentTarget.src !== fallbackImage) {
+                            e.currentTarget.src = fallbackImage;
+                          }
+                        }}
                         className="h-full w-full object-cover"
                       />
                     </div>
