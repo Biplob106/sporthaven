@@ -1,36 +1,205 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🏟️ SportHaven — Book Your Game
 
-## Getting Started
+A full-stack **MERN** sports facility booking platform built with **Next.js 16** and **Better Auth**.
+Discover and reserve turfs, courts, pools, and arenas near you in seconds.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🎯 Purpose
+
+SportHaven solves the everyday hassle of booking a sports venue.
+Instead of calling around turfs to find an open slot, players can:
+
+- Browse a curated catalogue of facilities (football, cricket, badminton, basketball, tennis, swimming, and more)
+- See real-time availability, capacity, and pricing
+- Reserve a date and time slot with a single click
+- Track and manage every booking from a personal dashboard
+
+Facility owners can also list their own venues, manage them, and start receiving bookings — making SportHaven a true two-sided marketplace for amateur sports.
+
+---
+
+## 🌐 Live URLs
+
+| | |
+|---|---|
+| **Frontend (this repo)** | https://sporthaven.vercel.app |
+| **Backend (Express API)** | https://sporthaven-server.vercel.app |
+| **Backend repo** | https://github.com/Biplob106/sporthaven-server |
+
+---
+
+## ✨ Features
+
+### Public
+- **Modern landing page** with a hero banner, featured facilities (loaded dynamically from MongoDB), how-it-works walkthrough, sport categories, and an owner CTA
+- **Browse all facilities** with live search-by-name and filter-by-sport
+- **Detail page per facility** with image, description, capacity, slots, amenities, and pricing
+
+### Authenticated users
+- **Email/Password auth** via Better Auth (with strict password rules: ≥6 chars, one upper, one lower)
+- **Google OAuth** social login
+- **Book a slot** — pick date, time slot, and hours; the total auto-calculates
+- **My Bookings dashboard** — view every reservation grouped by status (pending / confirmed / completed / cancelled), with one-click cancel
+- **List your own facility** — full form with sport type, location, image URL, price, capacity, slots, amenities
+
+### Facility owners
+- **Manage My Facilities** dashboard with KPIs (your facility count + total bookings)
+- **Edit** and **Delete** any facility you own, guarded by a confirmation modal
+- Ownership enforced on both the UI and the backend middleware
+
+### Engineering / UX
+- ⚡ **Next.js App Router** with server-rendered shells and client-rendered interactive views
+- 🔐 **JWT auth** stored in HTTP-only cookies and verified server-side via JWKS on the Express API
+- 🎨 **Theme toggle** (light / dark) with system-preference detection
+- 💫 **Framer Motion** for entrance, stagger, and hover micro-animations
+- 📱 Fully **responsive** (mobile, tablet, desktop)
+- 🛡️ **Secrets in env vars** — MongoDB credentials and OAuth secrets never hard-coded
+- 🚫 **No `alert()`** — every error and success message uses a custom Toast component
+- 🧭 Custom **404 page** and **global error boundary**
+- 🔄 No login-on-reload — private routes keep the session across refreshes
+
+---
+
+## 🧰 Tech Stack & NPM Packages Used
+
+### Frontend (this repo)
+
+| Package | Purpose |
+|---|---|
+| [`next`](https://www.npmjs.com/package/next) `16.2.6` | React framework — App Router, server components, image optimization |
+| [`react`](https://www.npmjs.com/package/react) `19.2.4` | UI library |
+| [`react-dom`](https://www.npmjs.com/package/react-dom) `19.2.4` | DOM renderer |
+| [`better-auth`](https://www.npmjs.com/package/better-auth) `^1.6.11` | Email/password + Google OAuth, JWT issuance, session management |
+| [`mongodb`](https://www.npmjs.com/package/mongodb) `^7.2.0` | MongoDB driver (used by Better Auth's adapter) |
+| [`framer-motion`](https://www.npmjs.com/package/framer-motion) `^12.39.0` | Page and component animations |
+| [`tailwindcss`](https://www.npmjs.com/package/tailwindcss) `^4` | Utility-first CSS |
+| [`@tailwindcss/postcss`](https://www.npmjs.com/package/@tailwindcss/postcss) `^4` | PostCSS plugin for Tailwind v4 |
+| [`babel-plugin-react-compiler`](https://www.npmjs.com/package/babel-plugin-react-compiler) `1.0.0` | React Compiler for memoization |
+| [`eslint`](https://www.npmjs.com/package/eslint) `^9` | Linting |
+| [`eslint-config-next`](https://www.npmjs.com/package/eslint-config-next) `16.2.6` | Next.js ESLint preset |
+
+### Backend (sporthaven-server)
+
+| Package | Purpose |
+|---|---|
+| `express` | REST API server |
+| `cors` | Cross-origin allowlist for the frontend |
+| `dotenv` | Loads `.env` in development |
+| `jose` | JWT verification against Better Auth's JWKS |
+| `jsonwebtoken` | Legacy token utilities |
+| `mongodb` | MongoDB driver |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌──────────────────────┐        ┌──────────────────────┐        ┌──────────────┐
+│  Next.js Frontend    │        │  Express API         │        │  MongoDB     │
+│  sporthaven.vercel   │ ─────► │  sporthaven-server   │ ─────► │  Atlas       │
+│                      │        │  .vercel.app         │        │              │
+│  • Pages & UI        │        │  • /facilities CRUD  │        │  • facilities│
+│  • Better Auth       │        │  • /bookings CRUD    │        │  • bookings  │
+│  • /api/auth/*       │        │  • JWT verify (jose) │        │  • auth_*    │
+└──────────────────────┘        └──────────────────────┘        └──────────────┘
+        ▲                                  ▲
+        │ HTTP-only cookie + JWT           │
+        └──────────────────────────────────┘
+                (Bearer token forwarded)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The frontend issues a JWT via Better Auth, stores it in an HTTP-only cookie, and forwards it as a Bearer token to the Express API. The API verifies the JWT against Better Auth's JWKS endpoint before allowing private writes.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🗄️ Database Schema
 
-## Learn More
+**Facilities Collection**
 
-To learn more about Next.js, take a look at the following resources:
+| Field | Type |
+|---|---|
+| `_id` | ObjectId |
+| `name` | string |
+| `facility_type` | string |
+| `location` | string |
+| `price_per_hour` | number |
+| `capacity` | number |
+| `available_slots` | string[] |
+| `description` | string |
+| `image` | string (URL) |
+| `amenities` | string[] |
+| `owner_email` | string (auto-filled) |
+| `booking_count` | number |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Bookings Collection**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Field | Type |
+|---|---|
+| `_id` | ObjectId |
+| `facility_id` | string |
+| `user_email` | string |
+| `booking_date` | string (YYYY-MM-DD) |
+| `time_slot` | string |
+| `hours` | number |
+| `total_price` | number |
+| `status` | `"pending" \| "confirmed" \| "completed" \| "cancelled"` |
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Run Locally
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+git clone https://github.com/Biplob106/sporthaven
+git clone https://github.com/Biplob106/sporthaven-server
+
+# 1. Backend
+cd sporthaven-server
+npm install
+# create .env with MONGODB_URI and AUTH_BASE
+npm run dev          # http://localhost:5000
+
+# 2. Frontend
+cd ../sporthaven
+npm install
+# create .env (see .env.example below)
+npm run dev          # http://localhost:3000
+```
+
+### Required `.env` (frontend)
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=<random-32-char-string>
+MONGODB_URI=<mongodb-atlas-connection-string>
+MONGODB_DB=sportHavenDB
+GOOGLE_CLIENT_ID=<from google cloud console>
+GOOGLE_CLIENT_SECRET=<from google cloud console>
+```
+
+### Required `.env` (backend)
+
+```env
+MONGODB_URI=<same as frontend>
+AUTH_BASE=http://localhost:3000
+PORT=5000
+```
+
+---
+
+## 📜 Available Scripts
+
+| Command | What it does |
+|---|---|
+| `npm run dev` | Start Next.js with Turbopack |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | Lint the project |
+
+---
+
+## 📄 License
+
+Built for the Programming Hero Assignment-9. © 2026 SportHaven.
